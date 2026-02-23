@@ -1,0 +1,54 @@
+name: Static Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "**"
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Static Podman
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+          cache: false
+
+      - name: Set up cross-compilation tools
+        if: matrix.arch == 'arm64'
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Build static podman (${{ matrix.arch }})
+        run: make podman-static-linux_${{ matrix.arch }}
+        env:
+          GOARCH: ${{ matrix.arch }}
+          CC: ${{ matrix.arch == 'arm64' && 'aarch64-linux-gnu-gcc' || 'gcc' }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: podman-static-linux_${{ matrix.arch }}
+          path: bin/podman-static-linux_${{ matrix.arch }}
