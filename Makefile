@@ -439,6 +439,20 @@ podman-remote-static: $(SRCBINDIR)/podman-remote-static
 podman-remote-static-linux_amd64: $(SRCBINDIR)/podman-remote-static-linux_amd64
 podman-remote-static-linux_arm64: $(SRCBINDIR)/podman-remote-static-linux_arm64
 
+$(SRCBINDIR)/podman-static-linux_%: GOARCH = $(patsubst $(SRCBINDIR)/podman-static-linux_%,%,$@)
+$(SRCBINDIR)/podman-static-linux_%: GOOS = linux
+$(SRCBINDIR)/podman-static-linux_amd64 $(SRCBINDIR)/podman-static-linux_arm64: $(SRCBINDIR) $(SOURCES) go.mod go.sum
+	CGO_ENABLED=0 \
+	$(GO) build \
+		$(BUILDFLAGS) \
+		$(GO_LDFLAGS) '$(LDFLAGS_PODMAN_STATIC)' \
+		-tags "${BUILDTAGS_CROSS}" \
+		-o $@ ./cmd/podman
+
+.PHONY: podman-static-linux_amd64 podman-static-linux_arm64
+podman-static-linux_amd64: $(SRCBINDIR)/podman-static-linux_amd64
+podman-static-linux_arm64: $(SRCBINDIR)/podman-static-linux_arm64
+
 .PHONY: podman-winpath
 podman-winpath: $(SOURCES) go.mod go.sum
 	CGO_ENABLED=0 \

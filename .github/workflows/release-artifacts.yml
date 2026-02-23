@@ -88,7 +88,9 @@ jobs:
             for artifact in 'podman-remote-release-darwin_arm64.zip darwin_arm' \
                   'podman-remote-release-windows_amd64.zip windows_amd' \
                   'podman-remote-static-linux_amd64.tar.gz linux_amd' \
-                  'podman-remote-static-linux_arm64.tar.gz linux_arm'
+                  'podman-remote-static-linux_arm64.tar.gz linux_arm' \
+                  'podman-static-linux_amd64.tar.gz podman_linux_amd' \
+                  'podman-static-linux_arm64.tar.gz podman_linux_arm'
             do
               set -- $artifact # Convert the "tuple" into the param args $1 $2...
               status=$(curl -s -o /dev/null -w "%{http_code}" "${URI}/${1:?}")
@@ -153,6 +155,24 @@ jobs:
             make podman-remote-static-linux_arm64
             tar -cvzf podman-remote-static-linux_arm64.tar.gz bin/podman-remote-static-linux_arm64
             mv podman-remote-static-linux_arm64.tar.gz release/
+
+      - name: Build Podman Static Linux AMD
+        if: >-
+          steps.check.outputs.podman_linux_amd == 'true' ||
+          steps.actual_dryrun.outputs.dryrun == 'true'
+        run: |
+            make podman-static-linux_amd64
+            tar -cvzf podman-static-linux_amd64.tar.gz bin/podman-static-linux_amd64
+            mv podman-static-linux_amd64.tar.gz release/
+
+      - name: Build Podman Static Linux ARM
+        if: >-
+          steps.check.outputs.podman_linux_arm == 'true' ||
+          steps.actual_dryrun.outputs.dryrun == 'true'
+        run: |
+            make podman-static-linux_arm64
+            tar -cvzf podman-static-linux_arm64.tar.gz bin/podman-static-linux_arm64
+            mv podman-static-linux_arm64.tar.gz release/
 
       - name: Build Windows AMD
         if: >-
