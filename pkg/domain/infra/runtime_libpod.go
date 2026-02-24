@@ -182,6 +182,10 @@ func getRuntime(ctx context.Context, fs *flag.FlagSet, opts *engineOpts) (*libpo
 		options = append(options, libpod.WithTmpDir(cfg.ContainersConf.Engine.TmpDir))
 	}
 
+	if fs.Changed("lock-type") {
+		options = append(options, libpod.WithLockType(cfg.ContainersConf.Engine.LockType))
+	}
+
 	if fs.Changed("events-backend") {
 		options = append(options, libpod.WithEventsLogger(cfg.ContainersConf.Engine.EventsLogger))
 	}

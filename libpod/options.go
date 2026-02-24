@@ -355,6 +355,22 @@ func WithTmpDir(dir string) RuntimeOption {
 	}
 }
 
+// WithLockType sets the lock manager type to use.
+// Valid values are "shm" (default, requires /dev/shm) and "file".
+// Use "file" in environments where /dev/shm is unavailable.
+func WithLockType(lockType string) RuntimeOption {
+	return func(rt *Runtime) error {
+		if rt.valid {
+			return define.ErrRuntimeFinalized
+		}
+		if lockType != "shm" && lockType != "file" {
+			return fmt.Errorf("lock type must be one of \"shm\" or \"file\": %w", define.ErrInvalidArg)
+		}
+		rt.config.Engine.LockType = lockType
+		return nil
+	}
+}
+
 // WithNetworkConfigDir sets the network configuration directory.
 func WithNetworkConfigDir(dir string) RuntimeOption {
 	return func(rt *Runtime) error {

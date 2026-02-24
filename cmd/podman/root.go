@@ -660,6 +660,9 @@ func rootFlags(cmd *cobra.Command, podmanConfig *entities.PodmanConfig) {
 		pFlags.StringVar(&podmanConfig.ContainersConf.Engine.TmpDir, tmpdirFlagName, podmanConfig.ContainersConfDefaultsRO.Engine.TmpDir, "Path to the tmp directory for libpod state content.\n\nNote: use the environment variable 'TMPDIR' to change the temporary storage location for container images, '/var/tmp'.\n")
 		_ = cmd.RegisterFlagCompletionFunc(tmpdirFlagName, completion.AutocompleteDefault)
 
+		lockTypeFlagName := "lock-type"
+		pFlags.StringVar(&podmanConfig.ContainersConf.Engine.LockType, lockTypeFlagName, podmanConfig.ContainersConfDefaultsRO.Engine.LockType, "Lock manager type to use (\"shm\"|\"file\"); use \"file\" when /dev/shm is unavailable")
+
 		pFlags.BoolVar(&podmanConfig.Trace, "trace", false, "Enable opentracing output (default false)")
 
 		volumePathFlagName := "volumepath"
