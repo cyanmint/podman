@@ -67,8 +67,12 @@ func netavarkBackendFromConf(store storage.Store, conf *config.Config, syslog bo
 	// libpod instances they also have to share the same ipam db.
 	// For rootless we have our own network namespace per libpod instances,
 	// so this is not a problem there.
+	// Exception: when the user has configured a custom RunRoot (not the default
+	// /run/containers/storage), respect it so paths under /run are not hard-coded.
 	runDir := netavarkRunDir
 	if unshare.IsRootless() {
+		runDir = filepath.Join(store.RunRoot(), "networks")
+	} else if store.RunRoot() != "/run/containers/storage" {
 		runDir = filepath.Join(store.RunRoot(), "networks")
 	}
 

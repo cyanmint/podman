@@ -114,6 +114,10 @@ func NewNetworkInterface(conf *InitConfig) (types.ContainerNetwork, error) {
 	lockPath := defaultRootLockPath
 	if useRootlessNetns {
 		lockPath = filepath.Join(conf.NetworkConfigDir, "netavark.lock")
+	} else if conf.NetworkRunDir != "" && conf.NetworkRunDir != "/run/containers/networks" {
+		// When a custom NetworkRunDir is set (e.g. derived from --runroot),
+		// keep the lock within that directory to avoid hard-coded /run paths.
+		lockPath = filepath.Join(conf.NetworkRunDir, "netavark.lock")
 	}
 
 	lock, err := lockfile.GetLockFile(lockPath)
