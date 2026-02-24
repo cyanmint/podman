@@ -266,6 +266,9 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 		if cmd.Flag("cdi-spec-dir").Changed {
 			podmanConfig.ContainersConf.Engine.CdiSpecDirs.Set(podmanConfig.CdiSpecDirs)
 		}
+		if cmd.Flag("helper-binaries-dir").Changed {
+			podmanConfig.ContainersConf.Engine.HelperBinariesDir.Set(podmanConfig.HelperBinariesDir)
+		}
 
 		// Currently it is only possible to restore a container with the same runtime
 		// as used for checkpointing. It should be possible to make crun and runc
@@ -581,6 +584,18 @@ func rootFlags(cmd *cobra.Command, podmanConfig *entities.PodmanConfig) {
 		conmonFlagName := "conmon"
 		pFlags.StringVar(&podmanConfig.ConmonPath, conmonFlagName, "", "Path of the conmon binary")
 		_ = cmd.RegisterFlagCompletionFunc(conmonFlagName, completion.AutocompleteDefault)
+
+		helperBinariesDirFlagName := "helper-binaries-dir"
+		pFlags.StringArrayVar(&podmanConfig.HelperBinariesDir, helperBinariesDirFlagName, podmanConfig.ContainersConfDefaultsRO.Engine.HelperBinariesDir.Get(), "Search path for helper binaries (netavark, aardvark-dns, pasta, etc.); may be set multiple times")
+		_ = cmd.RegisterFlagCompletionFunc(helperBinariesDirFlagName, completion.AutocompleteDefault)
+
+		netavarkPathFlagName := "netavark-path"
+		pFlags.StringVar(&podmanConfig.NetavarkPath, netavarkPathFlagName, "", "Path of the netavark binary")
+		_ = cmd.RegisterFlagCompletionFunc(netavarkPathFlagName, completion.AutocompleteDefault)
+
+		aardvarkDNSPathFlagName := "aardvark-dns-path"
+		pFlags.StringVar(&podmanConfig.AardvarkDNSPath, aardvarkDNSPathFlagName, "", "Path of the aardvark-dns binary")
+		_ = cmd.RegisterFlagCompletionFunc(aardvarkDNSPathFlagName, completion.AutocompleteDefault)
 
 		networkConfigDirFlagName := "network-config-dir"
 		pFlags.StringVar(&podmanConfig.ContainersConf.Network.NetworkConfigDir, networkConfigDirFlagName, podmanConfig.ContainersConfDefaultsRO.Network.NetworkConfigDir, "Path of the configuration directory for networks")

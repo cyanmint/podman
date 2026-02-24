@@ -162,6 +162,24 @@ func WithCtrOCIRuntime(runtime string) CtrCreateOption {
 	}
 }
 
+// WithHelperBinariesDir sets the directories to search for helper binaries
+// such as netavark, aardvark-dns, pasta, etc.  The provided list is prepended
+// to (and therefore takes priority over) any directories already configured via
+// containers.conf.
+func WithHelperBinariesDir(dirs []string) RuntimeOption {
+	return func(rt *Runtime) error {
+		if rt.valid {
+			return define.ErrRuntimeFinalized
+		}
+		if len(dirs) == 0 {
+			return nil
+		}
+		existing := rt.config.Engine.HelperBinariesDir.Get()
+		rt.config.Engine.HelperBinariesDir.Set(append(dirs, existing...))
+		return nil
+	}
+}
+
 // WithConmonPath specifies the path to the conmon binary which manages the
 // runtime.
 func WithConmonPath(path string) RuntimeOption {

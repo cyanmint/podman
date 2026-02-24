@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -158,6 +159,24 @@ func getRuntime(ctx context.Context, fs *flag.FlagSet, opts *engineOpts) (*libpo
 
 	if fs.Changed("conmon") {
 		options = append(options, libpod.WithConmonPath(cfg.ConmonPath))
+	}
+
+	if fs.Changed("helper-binaries-dir") || fs.Changed("netavark-path") || fs.Changed("aardvark-dns-path") {
+		// Collect extra dirs: explicit --helper-binaries-dir entries come first,
+		// then the directories derived from individual binary path flags.
+		var extraDirs []string
+		if fs.Changed("helper-binaries-dir") {
+			extraDirs = append(extraDirs, cfg.HelperBinariesDir...)
+		}
+		if fs.Changed("netavark-path") && cfg.NetavarkPath != "" {
+			extraDirs = append(extraDirs, filepath.Dir(cfg.NetavarkPath))
+		}
+		if fs.Changed("aardvark-dns-path") && cfg.AardvarkDNSPath != "" {
+			extraDirs = append(extraDirs, filepath.Dir(cfg.AardvarkDNSPath))
+		}
+		if len(extraDirs) > 0 {
+			options = append(options, libpod.WithHelperBinariesDir(extraDirs))
+		}
 	}
 	if fs.Changed("tmpdir") {
 		options = append(options, libpod.WithTmpDir(cfg.ContainersConf.Engine.TmpDir))

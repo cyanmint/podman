@@ -63,4 +63,7 @@ type PodmanConfig struct {
 	TransientStore bool
 	GraphRoot      string
 	PullOptions    []string
+	HelperBinariesDir []string
+	NetavarkPath      string
+	AardvarkDNSPath   string
 }
