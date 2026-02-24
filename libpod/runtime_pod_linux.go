@@ -77,6 +77,8 @@ func (r *Runtime) platformMakePod(pod *Pod, resourceLimits *spec.LinuxResources)
 				pod.state.CgroupPath = cgroupPath
 				cgroupParent = pod.state.CgroupPath
 			}
+		case config.DisabledCgroupsManager:
+			// No cgroup management - nothing to do.
 		default:
 			return "", fmt.Errorf("unsupported Cgroup manager: %s - cannot validate cgroup parent: %w", r.config.Engine.CgroupManager, define.ErrInvalidArg)
 		}
@@ -139,11 +141,9 @@ func (p *Pod) removePodCgroup() error {
 				return fmt.Errorf("removing pod %s cgroup: %w", p.ID(), err)
 			}
 		}
+	case config.DisabledCgroupsManager:
+		// No cgroup management - nothing to remove.
 	default:
-		// This should be caught much earlier, but let's still
-		// keep going so we make sure to evict the pod before
-		// ending up with an inconsistent state.
-		return fmt.Errorf("unrecognized cgroup manager %s when removing pod %s cgroups: %w", p.runtime.config.Engine.CgroupManager, p.ID(), define.ErrInternal)
 	}
 	return nil
 }

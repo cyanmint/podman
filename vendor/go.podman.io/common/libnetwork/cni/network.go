@@ -100,6 +100,8 @@ func NewCNINetworkInterface(conf *InitConfig) (types.ContainerNetwork, error) {
 	lockPath := defaultRootLockPath
 	if useRootlessNetns {
 		lockPath = filepath.Join(conf.CNIConfigDir, "cni.lock")
+	} else if conf.RunDir != "" && conf.RunDir != "/run/containers/networks" {
+		lockPath = filepath.Join(conf.RunDir, "podman-cni.lock")
 	}
 
 	lock, err := lockfile.GetLockFile(lockPath)

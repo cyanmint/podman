@@ -162,6 +162,24 @@ func WithCtrOCIRuntime(runtime string) CtrCreateOption {
 	}
 }
 
+// WithHelperBinariesDir sets the directories to search for helper binaries
+// such as netavark, aardvark-dns, pasta, etc.  The provided list is prepended
+// to (and therefore takes priority over) any directories already configured via
+// containers.conf.
+func WithHelperBinariesDir(dirs []string) RuntimeOption {
+	return func(rt *Runtime) error {
+		if rt.valid {
+			return define.ErrRuntimeFinalized
+		}
+		if len(dirs) == 0 {
+			return nil
+		}
+		existing := rt.config.Engine.HelperBinariesDir.Get()
+		rt.config.Engine.HelperBinariesDir.Set(append(dirs, existing...))
+		return nil
+	}
+}
+
 // WithConmonPath specifies the path to the conmon binary which manages the
 // runtime.
 func WithConmonPath(path string) RuntimeOption {
@@ -182,16 +200,18 @@ func WithConmonPath(path string) RuntimeOption {
 
 // WithCgroupManager specifies the manager implementation name which is used to
 // handle cgroups for containers.
-// Current valid values are "cgroupfs" and "systemd".
+// Valid values are "cgroupfs", "systemd", and "disabled".
+// "disabled" turns off cgroup management entirely, for use in environments
+// where cgroups are unavailable.
 func WithCgroupManager(manager string) RuntimeOption {
 	return func(rt *Runtime) error {
 		if rt.valid {
 			return define.ErrRuntimeFinalized
 		}
 
-		if manager != config.CgroupfsCgroupsManager && manager != config.SystemdCgroupsManager {
-			return fmt.Errorf("cgroup manager must be one of %s and %s: %w",
-				config.CgroupfsCgroupsManager, config.SystemdCgroupsManager, define.ErrInvalidArg)
+		if manager != config.CgroupfsCgroupsManager && manager != config.SystemdCgroupsManager && manager != config.DisabledCgroupsManager {
+			return fmt.Errorf("cgroup manager must be one of %s, %s, or %s: %w",
+				config.CgroupfsCgroupsManager, config.SystemdCgroupsManager, config.DisabledCgroupsManager, define.ErrInvalidArg)
 		}
 
 		rt.config.Engine.CgroupManager = manager
@@ -331,6 +351,22 @@ func WithTmpDir(dir string) RuntimeOption {
 		}
 		rt.config.Engine.TmpDir = dir
 
+		return nil
+	}
+}
+
+// WithLockType sets the lock manager type to use.
+// Valid values are "shm" (default, requires /dev/shm) and "file".
+// Use "file" in environments where /dev/shm is unavailable.
+func WithLockType(lockType string) RuntimeOption {
+	return func(rt *Runtime) error {
+		if rt.valid {
+			return define.ErrRuntimeFinalized
+		}
+		if lockType != "shm" && lockType != "file" {
+			return fmt.Errorf("lock type must be one of \"shm\" or \"file\": %w", define.ErrInvalidArg)
+		}
+		rt.config.Engine.LockType = lockType
 		return nil
 	}
 }

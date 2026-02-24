@@ -248,7 +248,7 @@ func setupRemoteConnection(podmanConfig *entities.PodmanConfig) string {
 func persistentPreRunE(cmd *cobra.Command, args []string) error {
 	logrus.Debugf("Called %s.PersistentPreRunE(%s)", cmd.Name(), strings.Join(os.Args, " "))
 
-	checkSupportedCgroups()
+	checkSupportedCgroups(cmd)
 
 	// Help, completion and commands with subcommands are special cases, no need for more setup
 	// Completion cmd is used to generate the shell scripts
@@ -265,6 +265,9 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 		}
 		if cmd.Flag("cdi-spec-dir").Changed {
 			podmanConfig.ContainersConf.Engine.CdiSpecDirs.Set(podmanConfig.CdiSpecDirs)
+		}
+		if cmd.Flag("helper-binaries-dir").Changed {
+			podmanConfig.ContainersConf.Engine.HelperBinariesDir.Set(podmanConfig.HelperBinariesDir)
 		}
 
 		// Currently it is only possible to restore a container with the same runtime
@@ -572,7 +575,7 @@ func rootFlags(cmd *cobra.Command, podmanConfig *entities.PodmanConfig) {
 		_ = cmd.RegisterFlagCompletionFunc(moduleFlagName, common.AutocompleteContainersConfModules)
 
 		cgroupManagerFlagName := "cgroup-manager"
-		pFlags.StringVar(&podmanConfig.ContainersConf.Engine.CgroupManager, cgroupManagerFlagName, podmanConfig.ContainersConfDefaultsRO.Engine.CgroupManager, "Cgroup manager to use (\"cgroupfs\"|\"systemd\")")
+		pFlags.StringVar(&podmanConfig.ContainersConf.Engine.CgroupManager, cgroupManagerFlagName, podmanConfig.ContainersConfDefaultsRO.Engine.CgroupManager, "Cgroup manager to use (\"cgroupfs\"|\"systemd\"|\"disabled\")")
 		_ = cmd.RegisterFlagCompletionFunc(cgroupManagerFlagName, common.AutocompleteCgroupManager)
 
 		pFlags.StringVar(&podmanConfig.CPUProfile, "cpu-profile", "", "Path for the cpu-profiling results")
@@ -581,6 +584,18 @@ func rootFlags(cmd *cobra.Command, podmanConfig *entities.PodmanConfig) {
 		conmonFlagName := "conmon"
 		pFlags.StringVar(&podmanConfig.ConmonPath, conmonFlagName, "", "Path of the conmon binary")
 		_ = cmd.RegisterFlagCompletionFunc(conmonFlagName, completion.AutocompleteDefault)
+
+		helperBinariesDirFlagName := "helper-binaries-dir"
+		pFlags.StringArrayVar(&podmanConfig.HelperBinariesDir, helperBinariesDirFlagName, podmanConfig.ContainersConfDefaultsRO.Engine.HelperBinariesDir.Get(), "Search path for helper binaries (netavark, aardvark-dns, pasta, etc.); may be set multiple times")
+		_ = cmd.RegisterFlagCompletionFunc(helperBinariesDirFlagName, completion.AutocompleteDefault)
+
+		netavarkPathFlagName := "netavark-path"
+		pFlags.StringVar(&podmanConfig.NetavarkPath, netavarkPathFlagName, "", "Path of the netavark binary")
+		_ = cmd.RegisterFlagCompletionFunc(netavarkPathFlagName, completion.AutocompleteDefault)
+
+		aardvarkDNSPathFlagName := "aardvark-dns-path"
+		pFlags.StringVar(&podmanConfig.AardvarkDNSPath, aardvarkDNSPathFlagName, "", "Path of the aardvark-dns binary")
+		_ = cmd.RegisterFlagCompletionFunc(aardvarkDNSPathFlagName, completion.AutocompleteDefault)
 
 		networkConfigDirFlagName := "network-config-dir"
 		pFlags.StringVar(&podmanConfig.ContainersConf.Network.NetworkConfigDir, networkConfigDirFlagName, podmanConfig.ContainersConfDefaultsRO.Network.NetworkConfigDir, "Path of the configuration directory for networks")
@@ -644,6 +659,9 @@ func rootFlags(cmd *cobra.Command, podmanConfig *entities.PodmanConfig) {
 		tmpdirFlagName := "tmpdir"
 		pFlags.StringVar(&podmanConfig.ContainersConf.Engine.TmpDir, tmpdirFlagName, podmanConfig.ContainersConfDefaultsRO.Engine.TmpDir, "Path to the tmp directory for libpod state content.\n\nNote: use the environment variable 'TMPDIR' to change the temporary storage location for container images, '/var/tmp'.\n")
 		_ = cmd.RegisterFlagCompletionFunc(tmpdirFlagName, completion.AutocompleteDefault)
+
+		lockTypeFlagName := "lock-type"
+		pFlags.StringVar(&podmanConfig.ContainersConf.Engine.LockType, lockTypeFlagName, podmanConfig.ContainersConfDefaultsRO.Engine.LockType, "Lock manager type to use (\"shm\"|\"file\"); use \"file\" when /dev/shm is unavailable")
 
 		pFlags.BoolVar(&podmanConfig.Trace, "trace", false, "Enable opentracing output (default false)")
 

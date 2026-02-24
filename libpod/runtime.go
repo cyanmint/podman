@@ -252,7 +252,24 @@ func getLockManager(runtime *Runtime) (lock.Manager, error) {
 			case errors.Is(err, os.ErrNotExist):
 				manager, err = lock.NewSHMLockManager(lockPath, runtime.config.Engine.NumLocks)
 				if err != nil {
-					return nil, fmt.Errorf("failed to get new shm lock manager: %w", err)
+					// If /dev/shm is unavailable, automatically fall back to file-based locking.
+					if errors.Is(err, os.ErrNotExist) {
+						logrus.Warnf("/dev/shm is not available, falling back to file-based locking in %s", runtime.config.Engine.TmpDir)
+						lockFilePath := filepath.Join(runtime.config.Engine.TmpDir, "locks")
+						manager, err = lock.OpenFileLockManager(lockFilePath)
+						if err != nil {
+							if errors.Is(err, os.ErrNotExist) {
+								manager, err = lock.NewFileLockManager(lockFilePath)
+								if err != nil {
+									return nil, fmt.Errorf("failed to get new file lock manager (shm fallback): %w", err)
+								}
+							} else {
+								return nil, err
+							}
+						}
+					} else {
+						return nil, fmt.Errorf("failed to get new shm lock manager: %w", err)
+					}
 				}
 			case errors.Is(err, syscall.ERANGE) && runtime.doRenumber:
 				logrus.Debugf("Number of locks does not match - removing old locks")
@@ -318,6 +335,13 @@ func makeRuntime(ctx context.Context, runtime *Runtime) (retErr error) {
 	if runtime.config.Engine.VolumePath == "" {
 		runtime.config.Engine.VolumePath = filepath.Join(runtime.storageConfig.GraphRoot, "volumes")
 		runtime.storageSet.VolumePathSet = true
+	}
+
+	// If TmpDir was not explicitly set but RunRoot was, derive TmpDir from
+	// RunRoot so that a custom --runroot avoids the hard-coded /run default.
+	if !runtime.storageSet.TmpDirSet && runtime.storageSet.RunRootSet {
+		runtime.config.Engine.TmpDir = filepath.Join(runtime.storageConfig.RunRoot, "libpod", "tmp")
+		runtime.storageSet.TmpDirSet = true
 	}
 
 	// Make the static files directory if it does not exist
