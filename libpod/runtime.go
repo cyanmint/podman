@@ -320,6 +320,13 @@ func makeRuntime(ctx context.Context, runtime *Runtime) (retErr error) {
 		runtime.storageSet.VolumePathSet = true
 	}
 
+	// If TmpDir was not explicitly set but RunRoot was, derive TmpDir from
+	// RunRoot so that a custom --runroot avoids the hard-coded /run default.
+	if !runtime.storageSet.TmpDirSet && runtime.storageSet.RunRootSet {
+		runtime.config.Engine.TmpDir = filepath.Join(runtime.storageConfig.RunRoot, "libpod", "tmp")
+		runtime.storageSet.TmpDirSet = true
+	}
+
 	// Make the static files directory if it does not exist
 	if err := os.MkdirAll(runtime.config.Engine.StaticDir, 0o700); err != nil {
 		// The directory is allowed to exist
