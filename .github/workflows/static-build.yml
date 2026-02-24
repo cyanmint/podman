@@ -59,6 +59,16 @@ jobs:
             libseccomp-dev:arm64 \
             pkg-config
 
+      - name: Set CGO_LDFLAGS for static link (amd64)
+        if: matrix.arch == 'amd64'
+        run: |
+          echo "CGO_LDFLAGS=$(pkg-config --static --libs gpgme)" >> $GITHUB_ENV
+
+      - name: Set CGO_LDFLAGS for static link (arm64)
+        if: matrix.arch == 'arm64'
+        run: |
+          echo "CGO_LDFLAGS=$(PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig pkg-config --static --libs gpgme)" >> $GITHUB_ENV
+
       - name: Build static podman (${{ matrix.arch }})
         run: make podman-static-linux_${{ matrix.arch }}
         env:
