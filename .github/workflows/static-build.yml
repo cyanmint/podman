@@ -35,17 +35,36 @@ jobs:
           go-version: stable
           cache: false
 
-      - name: Set up cross-compilation tools
-        if: matrix.arch == 'arm64'
+      - name: Install build dependencies (amd64)
+        if: matrix.arch == 'amd64'
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y gcc-aarch64-linux-gnu
+          sudo apt-get install -y libgpgme-dev libseccomp-dev pkg-config
+
+      - name: Install build dependencies (arm64 cross-compile)
+        if: matrix.arch == 'arm64'
+        run: |
+          sudo dpkg --add-architecture arm64
+          # Restrict existing sources to amd64, then add arm64 ports
+          sudo sed -i 's/^Types: deb$/Types: deb\nArchitectures: amd64/' /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null \
+            || sudo sed -i 's/^deb /deb [arch=amd64] /' /etc/apt/sources.list
+          printf 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports %s main restricted universe\n' \
+            "$(. /etc/os-release && echo $VERSION_CODENAME)" \
+            "$(. /etc/os-release && echo $VERSION_CODENAME)-updates" \
+            | sudo tee /etc/apt/sources.list.d/arm64-ports.list
+          sudo apt-get update -q
+          sudo apt-get install -y \
+            gcc-aarch64-linux-gnu \
+            libgpgme-dev:arm64 \
+            libseccomp-dev:arm64 \
+            pkg-config
 
       - name: Build static podman (${{ matrix.arch }})
         run: make podman-static-linux_${{ matrix.arch }}
         env:
           GOARCH: ${{ matrix.arch }}
           CC: ${{ matrix.arch == 'arm64' && 'aarch64-linux-gnu-gcc' || 'gcc' }}
+          PKG_CONFIG_PATH: ${{ matrix.arch == 'arm64' && '/usr/lib/aarch64-linux-gnu/pkgconfig' || '' }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v6
