@@ -248,7 +248,7 @@ func setupRemoteConnection(podmanConfig *entities.PodmanConfig) string {
 func persistentPreRunE(cmd *cobra.Command, args []string) error {
 	logrus.Debugf("Called %s.PersistentPreRunE(%s)", cmd.Name(), strings.Join(os.Args, " "))
 
-	checkSupportedCgroups()
+	checkSupportedCgroups(cmd)
 
 	// Help, completion and commands with subcommands are special cases, no need for more setup
 	// Completion cmd is used to generate the shell scripts
@@ -575,7 +575,7 @@ func rootFlags(cmd *cobra.Command, podmanConfig *entities.PodmanConfig) {
 		_ = cmd.RegisterFlagCompletionFunc(moduleFlagName, common.AutocompleteContainersConfModules)
 
 		cgroupManagerFlagName := "cgroup-manager"
-		pFlags.StringVar(&podmanConfig.ContainersConf.Engine.CgroupManager, cgroupManagerFlagName, podmanConfig.ContainersConfDefaultsRO.Engine.CgroupManager, "Cgroup manager to use (\"cgroupfs\"|\"systemd\")")
+		pFlags.StringVar(&podmanConfig.ContainersConf.Engine.CgroupManager, cgroupManagerFlagName, podmanConfig.ContainersConfDefaultsRO.Engine.CgroupManager, "Cgroup manager to use (\"cgroupfs\"|\"systemd\"|\"disabled\")")
 		_ = cmd.RegisterFlagCompletionFunc(cgroupManagerFlagName, common.AutocompleteCgroupManager)
 
 		pFlags.StringVar(&podmanConfig.CPUProfile, "cpu-profile", "", "Path for the cpu-profiling results")

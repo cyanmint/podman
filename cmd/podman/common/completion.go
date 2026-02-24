@@ -1723,9 +1723,9 @@ func AutocompleteWaitCondition(_ *cobra.Command, _ []string, _ string) ([]string
 }
 
 // AutocompleteCgroupManager - Autocomplete cgroup manager options.
-// -> "cgroupfs", "systemd"
+// -> "cgroupfs", "systemd", "disabled"
 func AutocompleteCgroupManager(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-	types := []string{config.CgroupfsCgroupsManager, config.SystemdCgroupsManager}
+	types := []string{config.CgroupfsCgroupsManager, config.SystemdCgroupsManager, config.DisabledCgroupsManager}
 	return types, cobra.ShellCompDirectiveNoFileComp
 }
 

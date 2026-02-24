@@ -200,16 +200,18 @@ func WithConmonPath(path string) RuntimeOption {
 
 // WithCgroupManager specifies the manager implementation name which is used to
 // handle cgroups for containers.
-// Current valid values are "cgroupfs" and "systemd".
+// Valid values are "cgroupfs", "systemd", and "disabled".
+// "disabled" turns off cgroup management entirely, for use in environments
+// where cgroups are unavailable.
 func WithCgroupManager(manager string) RuntimeOption {
 	return func(rt *Runtime) error {
 		if rt.valid {
 			return define.ErrRuntimeFinalized
 		}
 
-		if manager != config.CgroupfsCgroupsManager && manager != config.SystemdCgroupsManager {
-			return fmt.Errorf("cgroup manager must be one of %s and %s: %w",
-				config.CgroupfsCgroupsManager, config.SystemdCgroupsManager, define.ErrInvalidArg)
+		if manager != config.CgroupfsCgroupsManager && manager != config.SystemdCgroupsManager && manager != config.DisabledCgroupsManager {
+			return fmt.Errorf("cgroup manager must be one of %s, %s, or %s: %w",
+				config.CgroupfsCgroupsManager, config.SystemdCgroupsManager, config.DisabledCgroupsManager, define.ErrInvalidArg)
 		}
 
 		rt.config.Engine.CgroupManager = manager

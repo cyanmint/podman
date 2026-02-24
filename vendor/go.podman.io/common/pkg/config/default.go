@@ -171,6 +171,10 @@ const (
 	DefaultHostsFile = "/etc/hosts"
 	// SystemdCgroupsManager represents systemd native cgroup manager.
 	SystemdCgroupsManager = "systemd"
+	// DisabledCgroupsManager disables cgroup management entirely.
+	// Use this in environments where cgroups are unavailable (e.g. embedded
+	// systems, containers without cgroup mounts).
+	DisabledCgroupsManager = "disabled"
 	// DefaultLogSizeMax is the default value for the maximum log size
 	// allowed for a container. Negative values mean that no limit is imposed.
 	DefaultLogSizeMax = -1

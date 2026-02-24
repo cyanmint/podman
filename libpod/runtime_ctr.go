@@ -418,6 +418,9 @@ func (r *Runtime) setupContainer(ctx context.Context, ctr *Container) (_ *Contai
 			} else if len(ctr.config.CgroupParent) < 6 || !strings.HasSuffix(path.Base(ctr.config.CgroupParent), ".slice") {
 				return nil, fmt.Errorf("did not receive systemd slice as cgroup parent when using systemd to manage cgroups: %w", define.ErrInvalidArg)
 			}
+		case config.DisabledCgroupsManager:
+			// Treat as NoCgroups - no cgroup management.
+			ctr.config.NoCgroups = true
 		default:
 			return nil, fmt.Errorf("unsupported Cgroup manager: %s - cannot validate cgroup parent: %w", r.config.Engine.CgroupManager, define.ErrInvalidArg)
 		}
